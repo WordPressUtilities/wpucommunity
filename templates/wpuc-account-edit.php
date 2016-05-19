@@ -1,6 +1,6 @@
 <?php
 get_header();
-$user_info = get_userdata(get_current_user_id());
+$user_info = wp_get_current_user();
 $username = $user_info->user_login;
 ?>
 <form action="" method="post" class="wpucommunity-form-edit">
@@ -13,8 +13,12 @@ $username = $user_info->user_login;
                 <input name="first_name" id="first_name" type="text" value="<?php echo esc_attr($user_info->first_name); ?>" />
             </li>
             <li>
-                <label for="last_name"><?php echo __('last name', 'wpucommunity'); ?></label>
+                <label for="last_name"><?php echo __('Last name', 'wpucommunity'); ?></label>
                 <input name="last_name" id="last_name" type="text" value="<?php echo esc_attr($user_info->last_name); ?>" />
+            </li>
+            <li>
+                <label for="user_email"><?php echo __('Email', 'wpucommunity'); ?></label>
+                <input name="user_email" id="user_email" type="email" value="<?php echo esc_attr($user_info->user_email); ?>" />
             </li>
             <li>
                 <button type="submit"><?php echo __( 'Save', 'wpucommunity' ); ?></button>

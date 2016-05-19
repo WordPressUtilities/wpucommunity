@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.3
+Version: 0.3.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -194,15 +194,37 @@ class WPUCommunity {
     public function postAction_edit() {
         $userdata = array();
         $fields = array(
-            'first_name' => array('name' => 'First name'),
-            'last_name' => array('name' => 'last name')
+            'first_name' => array(
+                'name' => 'First name',
+                'type' => 'text'
+            ),
+            'last_name' => array(
+                'name' => 'Last name',
+                'type' => 'text'
+            ),
+            'user_email' => array(
+                'name' => 'Email',
+                'type' => 'email'
+            )
         );
 
+        $current_user = wp_get_current_user();
         foreach ($fields as $id => $field) {
+
+            $value = $current_user->$id;
             if (isset($_POST[$id])) {
-                $value = esc_html($_POST[$id]);
-                $userdata[$id] = $value;
+                $tmp_value = esc_html($_POST[$id]);
+                switch ($field['type']) {
+                case 'email':
+                    if (!empty($tmp_value) && filter_var($tmp_value, FILTER_VALIDATE_EMAIL) !== false) {
+                        $value = $tmp_value;
+                    }
+                    break;
+                default:
+                    $value = $tmp_value;
+                }
             }
+            $userdata[$id] = $value;
         }
 
         if (empty($userdata)) {
