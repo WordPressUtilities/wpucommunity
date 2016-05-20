@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.3.1
+Version: 0.4
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -192,6 +192,7 @@ class WPUCommunity {
     }
 
     public function postAction_edit() {
+        $current_user = wp_get_current_user();
         $userdata = array();
         $fields = array(
             'first_name' => array(
@@ -208,9 +209,12 @@ class WPUCommunity {
             )
         );
 
-        $current_user = wp_get_current_user();
-        foreach ($fields as $id => $field) {
+        /* Password */
+        $this->change_user_password_from(get_current_user_id(), $_POST);
 
+        /* Change datas */
+
+        foreach ($fields as $id => $field) {
             $value = $current_user->$id;
             if (isset($_POST[$id])) {
                 $tmp_value = esc_html($_POST[$id]);
@@ -236,6 +240,33 @@ class WPUCommunity {
         wp_redirect($this->get_url('account-edit'));
         die;
 
+    }
+
+    public function change_user_password_from($user_id = 1, $post = array()) {
+        $user_info = get_userdata($user_id);
+
+        /* If new password is correctly defined */
+        if (!isset($post['new_password'], $post['new_password2'])) {
+            return false;
+        }
+        if (empty($post['new_password'])) {
+            return false;
+        }
+        if ($post['new_password'] != $post['new_password2']) {
+            return false;
+        }
+
+        /* Change password */
+        wp_set_password($post['new_password'], $user_id);
+        wp_cache_delete($user_id, 'users');
+        wp_cache_delete($user_info->user_login, 'userlogins');
+        wp_logout();
+        if (wp_signon(array('user_login' => $user_info->user_login, 'user_password' => $post['new_password']), false)):
+            wp_redirect($this->get_url('account-edit'));
+            exit;
+        endif;
+
+        return true;
     }
 
     /* ----------------------------------------------------------
