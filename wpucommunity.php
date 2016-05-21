@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.4
+Version: 0.4.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -72,6 +72,8 @@ class WPUCommunity {
                 'name' => __('Account', 'wpucommunity')
             )
         );
+
+        $this->pages = apply_filters('wpucommunity_pages', $this->pages);
     }
 
     /* ----------------------------------------------------------
@@ -106,8 +108,8 @@ class WPUCommunity {
             flush_rewrite_rules();
         }
 
-        foreach ($this->pages as $id => $page) {
-            add_rewrite_rule($page['regex'], 'index.php?wpuc=' . $id, 'top');
+        foreach ($this->pages as $id => $p) {
+            add_rewrite_rule($p['regex'], 'index.php?wpuc=' . $id, 'top');
         }
 
     }
@@ -126,21 +128,19 @@ class WPUCommunity {
 
         if (!empty($wp_query->query_vars['wpuc']) && array_key_exists($wp_query->query_vars['wpuc'], $this->pages)) {
             $this->set_current_page($wp_query->query_vars['wpuc']);
-
         }
     }
 
     public function template_redirect() {
 
-        $page = $this->current_page;
         $logged_in = is_user_logged_in();
 
-        if (empty($page)) {
+        if (empty($this->current_page)) {
             return;
         }
 
         foreach ($this->pages as $id_page => $tmp_page) {
-            if ($id_page != $page) {
+            if ($id_page != $this->current_page) {
                 continue;
             }
 
