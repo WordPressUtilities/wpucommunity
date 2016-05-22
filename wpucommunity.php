@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.4.1
+Version: 0.5
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -14,6 +14,7 @@ class WPUCommunity {
     private $current_page = '';
 
     private $pages = array();
+    private $user_fields = array();
 
     public function __construct() {
 
@@ -72,6 +73,51 @@ class WPUCommunity {
                 'name' => __('Account', 'wpucommunity')
             )
         );
+
+        $user_sections = array(
+            'native' => array('name' => 'My Infos'),
+            'password' => array('name' => 'My Password')
+        );
+
+        $user_fields = array(
+            'first_name' => array(
+                'section' => 'native',
+                'name' => 'First name',
+                'type' => 'text'
+            ),
+            'last_name' => array(
+                'section' => 'native',
+                'name' => 'Last name',
+                'type' => 'text'
+            ),
+            'user_email' => array(
+                'section' => 'native',
+                'name' => 'Email',
+                'type' => 'email'
+            ),
+            'new_password' => array(
+                'section' => 'password',
+                'name' => 'New password',
+                'type' => 'password'
+            ),
+            'new_password2' => array(
+                'section' => 'password',
+                'name' => 'New password (repeat',
+                'type' => 'password'
+            )
+        );
+
+        $this->user_fields = apply_filters('wpucommunity_user_fields', $user_fields);
+        $this->user_sections = apply_filters('wpucommunity_user_sections', $user_sections);
+
+        foreach ($this->user_fields as $id => $field) {
+            if (!isset($field['section'])) {
+                $this->user_fields[$id]['section'] = 'default';
+            }
+            if (!isset($field['type'])) {
+                $this->user_fields[$id]['type'] = 'text';
+            }
+        }
 
         $this->pages = apply_filters('wpucommunity_pages', $this->pages);
     }
@@ -194,27 +240,14 @@ class WPUCommunity {
     public function postAction_edit() {
         $current_user = wp_get_current_user();
         $userdata = array();
-        $fields = array(
-            'first_name' => array(
-                'name' => 'First name',
-                'type' => 'text'
-            ),
-            'last_name' => array(
-                'name' => 'Last name',
-                'type' => 'text'
-            ),
-            'user_email' => array(
-                'name' => 'Email',
-                'type' => 'email'
-            )
-        );
-
+        $user_id = get_current_user_id();
         /* Password */
-        $this->change_user_password_from(get_current_user_id(), $_POST);
+        $this->change_user_password_from($user_id, $_POST);
 
         /* Change datas */
 
-        foreach ($fields as $id => $field) {
+
+        foreach ($this->user_fields as $id => $field) {
             $value = $current_user->$id;
             if (isset($_POST[$id])) {
                 $tmp_value = esc_html($_POST[$id]);
@@ -228,14 +261,20 @@ class WPUCommunity {
                     $value = $tmp_value;
                 }
             }
-            $userdata[$id] = $value;
+            if ($field['section'] != 'password') {
+                if ($field['section'] == 'native') {
+                    $userdata[$id] = $value;
+                } else {
+                    update_user_meta($user_id, $id, $value);
+                }
+            }
         }
 
         if (empty($userdata)) {
             return;
         }
 
-        $userdata['ID'] = get_current_user_id();
+        $userdata['ID'] = $user_id;
         wp_update_user($userdata);
         wp_redirect($this->get_url('account-edit'));
         die;
@@ -267,6 +306,51 @@ class WPUCommunity {
         endif;
 
         return true;
+    }
+
+    public function get_form_html() {
+
+        $html = '<form action="" method="post" class="wpucommunity-form-edit"><div>';
+        $html .= wp_nonce_field('wpucommunity_form_edit', 'wpucommunity_form_edit', true, false);
+        $html .= '<input type="hidden" name="wpuc-action" value="edit" />';
+        foreach ($this->user_sections as $id => $section) {
+            $html .= $this->get_section_html($section['name'], $id);
+        }
+
+        $html .= '<p><button type="submit">' . __('Save', 'wpucommunity') . '</button></p>';
+        $html .= '</div></form>';
+
+        return $html;
+    }
+
+    public function get_section_html($name, $section) {
+        $html = '<h3 class="legend">' . $name . '</h3><ul>';
+
+        $user_info = wp_get_current_user();
+        foreach ($this->user_fields as $id => $field) {
+            if ($field['section'] != $section) {
+                continue;
+            }
+            $value = '';
+            if ($field['section'] == 'native') {
+                $value = $user_info->$id;
+            }
+            if ($field['section'] != 'password' && $field['section'] != 'native') {
+                $value = get_user_meta($user_info->ID, $id, 1);
+            }
+            $html .= '<li>' . $this->get_field_html($id, $field['name'], $value, $field['type']) . '</li>';
+        }
+
+        $html .= '</ul>';
+        return $html;
+
+    }
+
+    public function get_field_html($id, $name, $value, $type) {
+        $html = '';
+        $html .= '<label for="' . $id . '">' . $name . '</label>';
+        $html .= '<input name="' . $id . '" id="' . $id . '" type="' . $type . '" value="' . $value . '" />';
+        return $html;
     }
 
     /* ----------------------------------------------------------
