@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.5
+Version: 0.6
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -50,6 +50,8 @@ class WPUCommunity {
             'body_classes'
         ));
 
+        load_plugin_textdomain('wpucommunity', false, dirname(plugin_basename(__FILE__)) . '/lang/');
+
         $this->pages = array(
             'signin' => array(
                 'url' => '/signin/',
@@ -75,40 +77,44 @@ class WPUCommunity {
         );
 
         $user_sections = array(
-            'native' => array('name' => 'My Infos'),
-            'password' => array('name' => 'My Password')
+            'native' => array(
+                'name' => __('My Infos', 'wpucommunity')
+            ),
+            'password' => array(
+                'name' => __('My Password', 'wpucommunity')
+            )
         );
 
         $user_fields = array(
             'first_name' => array(
                 'section' => 'native',
-                'name' => 'First name',
+                'name' => __('First name', 'wpucommunity'),
                 'type' => 'text'
             ),
             'last_name' => array(
                 'section' => 'native',
-                'name' => 'Last name',
+                'name' => __('Last name', 'wpucommunity'),
                 'type' => 'text'
             ),
             'user_email' => array(
                 'section' => 'native',
-                'name' => 'Email',
+                'name' => __('Email', 'wpucommunity'),
                 'type' => 'email'
             ),
             'new_password' => array(
                 'section' => 'password',
-                'name' => 'New password',
+                'name' => __('New password', 'wpucommunity'),
                 'type' => 'password'
             ),
             'new_password2' => array(
                 'section' => 'password',
-                'name' => 'New password (repeat',
+                'name' => __('New password (repeat)', 'wpucommunity'),
                 'type' => 'password'
             )
         );
 
-        $this->user_fields = apply_filters('wpucommunity_user_fields', $user_fields);
         $this->user_sections = apply_filters('wpucommunity_user_sections', $user_sections);
+        $this->user_fields = apply_filters('wpucommunity_user_fields', $user_fields);
 
         foreach ($this->user_fields as $id => $field) {
             if (!isset($field['section'])) {
@@ -241,32 +247,32 @@ class WPUCommunity {
         $current_user = wp_get_current_user();
         $userdata = array();
         $user_id = get_current_user_id();
-        /* Password */
-        $this->change_user_password_from($user_id, $_POST);
 
         /* Change datas */
 
-
         foreach ($this->user_fields as $id => $field) {
-            $value = $current_user->$id;
-            if (isset($_POST[$id])) {
-                $tmp_value = esc_html($_POST[$id]);
-                switch ($field['type']) {
-                case 'email':
-                    if (!empty($tmp_value) && filter_var($tmp_value, FILTER_VALIDATE_EMAIL) !== false) {
-                        $value = $tmp_value;
-                    }
-                    break;
-                default:
-                    $value = $tmp_value;
-                }
+            if ($field['section'] == 'password') {
+                continue;
             }
-            if ($field['section'] != 'password') {
-                if ($field['section'] == 'native') {
-                    $userdata[$id] = $value;
-                } else {
-                    update_user_meta($user_id, $id, $value);
-                }
+
+            // Get initial value
+            $value = '';
+            if ($field['section'] == 'native') {
+                $value = $current_user->$id;
+            } else {
+                $value = get_user_meta($user_id, $id);
+            }
+
+            // Get submitted value
+            if (isset($_POST[$id])) {
+                $value = $this->validate_field($id, $field, $_POST[$id]);
+            }
+
+            // Save value
+            if ($field['section'] == 'native') {
+                $userdata[$id] = $value;
+            } else {
+                update_user_meta($user_id, $id, $value);
             }
         }
 
@@ -276,9 +282,38 @@ class WPUCommunity {
 
         $userdata['ID'] = $user_id;
         wp_update_user($userdata);
+
+        /* Password */
+        $this->change_user_password_from($user_id, $_POST);
+
         wp_redirect($this->get_url('account-edit'));
         die;
 
+    }
+
+    public function validate_field($id = '', $field = '', $value = '') {
+        $tmp_value = esc_html($value);
+        $value = '';
+        switch ($field['type']) {
+        case 'email':
+            if (!empty($tmp_value) && filter_var($tmp_value, FILTER_VALIDATE_EMAIL) !== false) {
+                $value = $tmp_value;
+            }
+            break;
+        case 'number':
+            if (!empty($tmp_value) && is_numeric($tmp_value)) {
+                $value = $tmp_value;
+            }
+            break;
+        case 'url':
+            if (!empty($tmp_value) && filter_var($tmp_value, FILTER_VALIDATE_URL) !== false) {
+                $value = $tmp_value;
+            }
+            break;
+        default:
+            $value = $tmp_value;
+        }
+        return $value;
     }
 
     public function change_user_password_from($user_id = 1, $post = array()) {
@@ -349,7 +384,15 @@ class WPUCommunity {
     public function get_field_html($id, $name, $value, $type) {
         $html = '';
         $html .= '<label for="' . $id . '">' . $name . '</label>';
-        $html .= '<input name="' . $id . '" id="' . $id . '" type="' . $type . '" value="' . $value . '" />';
+        switch ($type) {
+        case 'text':
+        case 'url':
+        case 'number':
+        case 'email':
+        case 'password':
+            $html .= '<input name="' . $id . '" id="' . $id . '" type="' . $type . '" value="' . $value . '" />';
+            break;
+        }
         return $html;
     }
 
