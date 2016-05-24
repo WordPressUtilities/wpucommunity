@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.6
+Version: 0.6.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -211,6 +211,9 @@ class WPUCommunity {
     }
 
     public function body_classes($classes) {
+        if (empty($this->current_page)) {
+            return $classes;
+        }
         if (($key = array_search('home', $classes)) !== false) {
             unset($classes[$key]);
         }
