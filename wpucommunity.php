@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.6.1
+Version: 0.6.2
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -13,10 +13,20 @@ License URI: http://opensource.org/licenses/MIT
 class WPUCommunity {
     private $current_page = '';
 
+    private $notices_categories = array(
+        'updated',
+        'update-nag',
+        'error'
+    );
+
     private $pages = array();
     private $user_fields = array();
 
     public function __construct() {
+
+        add_action('init', array(&$this,
+            'init'
+        ), 10);
 
         add_action('init', array(&$this,
             'rewrite_rules'
@@ -48,6 +58,10 @@ class WPUCommunity {
 
         add_filter('body_class', array(&$this,
             'body_classes'
+        ));
+
+        add_action('wpucommunity_messages', array(&$this,
+            'display_messages'
         ));
 
         load_plugin_textdomain('wpucommunity', false, dirname(plugin_basename(__FILE__)) . '/lang/');
@@ -126,6 +140,18 @@ class WPUCommunity {
         }
 
         $this->pages = apply_filters('wpucommunity_pages', $this->pages);
+    }
+
+    public function init() {
+        $prefix = '';
+        $current_user = wp_get_current_user();
+        if (is_object($current_user)) {
+            $prefix .= $current_user->ID;
+        }
+
+        // Set Messages
+        $this->transient_prefix = sanitize_title(basename(__FILE__)) . $prefix;
+        $this->transient_msg = $this->transient_prefix . '__messages';
     }
 
     /* ----------------------------------------------------------
@@ -288,7 +314,7 @@ class WPUCommunity {
 
         /* Password */
         $this->change_user_password_from($user_id, $_POST);
-
+        $this->set_message('success-edit', __('Your account has been successfully edited', 'wpucommunity'));
         wp_redirect($this->get_url('account-edit'));
         die;
 
@@ -459,6 +485,39 @@ class WPUCommunity {
             return get_home_url();
         }
         return get_home_url() . $this->pages[$id]['url'];
+    }
+
+    /* ----------------------------------------------------------
+      Messages
+    ---------------------------------------------------------- */
+
+    /* Set notices messages */
+    public function set_message($id, $message, $group = '') {
+        if (defined('DOING_CRON')) {
+            return;
+        }
+        $messages = (array) get_transient($this->transient_msg);
+        if (!in_array($group, $this->notices_categories)) {
+            $group = $this->notices_categories[0];
+        }
+        $messages[$group][$id] = $message;
+        set_transient($this->transient_msg, $messages);
+    }
+
+    public function display_messages() {
+        $messages = (array) get_transient($this->transient_msg);
+        if (!empty($messages)) {
+            foreach ($messages as $group_id => $group) {
+                if (is_array($group)) {
+                    foreach ($group as $message) {
+                        echo '<div class="public-notice ' . $group_id . ' notice is-dismissible"><p>' . $message . '</p></div>';
+                    }
+                }
+            }
+        }
+
+        // Empty messages
+        delete_transient($this->transient_msg);
     }
 
     /* ----------------------------------------------------------
