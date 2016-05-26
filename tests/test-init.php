@@ -25,9 +25,9 @@ class WPUCommunity_Init extends WP_UnitTestCase
             $this->demo_plugin,
             'check_current_page'
         )));
-        $this->assertEquals(10, has_action('wp', array(
+        $this->assertEquals(10, has_action('init', array(
             $this->demo_plugin,
-            'postaction'
+            'postAction'
         )));
         $this->assertEquals(99, has_filter('template_include', array(
             $this->demo_plugin,

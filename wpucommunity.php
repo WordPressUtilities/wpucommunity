@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.6.2
+Version: 0.7
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -24,6 +24,9 @@ class WPUCommunity {
 
     public function __construct() {
 
+        if (!session_id()) {
+            session_start();
+        }
         add_action('init', array(&$this,
             'init'
         ), 10);
@@ -64,9 +67,20 @@ class WPUCommunity {
             'display_messages'
         ));
 
+        add_action('wp_logout', array(&$this,
+            'session_clear'
+        ));
+
         load_plugin_textdomain('wpucommunity', false, dirname(plugin_basename(__FILE__)) . '/lang/');
 
         $this->pages = array(
+            'register' => array(
+                'url' => '/register/',
+                'regex' => '^register/?',
+                'must_be_logged' => 0,
+                'must_not_be_logged' => 1,
+                'name' => __('Sign in', 'wpucommunity')
+            ),
             'signin' => array(
                 'url' => '/signin/',
                 'regex' => '^signin/?',
@@ -94,7 +108,7 @@ class WPUCommunity {
             'native' => array(
                 'name' => __('My Infos', 'wpucommunity')
             ),
-            'password' => array(
+            'new_password' => array(
                 'name' => __('My Password', 'wpucommunity')
             )
         );
@@ -116,17 +130,39 @@ class WPUCommunity {
                 'type' => 'email'
             ),
             'new_password' => array(
-                'section' => 'password',
+                'section' => 'new_password',
                 'name' => __('New password', 'wpucommunity'),
                 'type' => 'password'
             ),
             'new_password2' => array(
-                'section' => 'password',
+                'section' => 'new_password',
                 'name' => __('New password (repeat)', 'wpucommunity'),
                 'type' => 'password'
             )
         );
 
+        $register_fields = array(
+            'user_email' => array(
+                'section' => 'native',
+                'required' => 1,
+                'name' => __('Email', 'wpucommunity'),
+                'type' => 'email'
+            ),
+            'user_password' => array(
+                'section' => 'password',
+                'required' => 1,
+                'name' => __('Password', 'wpucommunity'),
+                'type' => 'password'
+            ),
+            'user_password2' => array(
+                'section' => 'password',
+                'required' => 1,
+                'name' => __('Password (repeat)', 'wpucommunity'),
+                'type' => 'password'
+            )
+        );
+
+        $this->register_fields = apply_filters('wpucommunity_register_fields', $register_fields);
         $this->user_sections = apply_filters('wpucommunity_user_sections', $user_sections);
         $this->user_fields = apply_filters('wpucommunity_user_fields', $user_fields);
 
@@ -143,11 +179,7 @@ class WPUCommunity {
     }
 
     public function init() {
-        $prefix = '';
-        $current_user = wp_get_current_user();
-        if (is_object($current_user)) {
-            $prefix .= $current_user->ID;
-        }
+        $prefix = session_id();
 
         // Set Messages
         $this->transient_prefix = sanitize_title(basename(__FILE__)) . $prefix;
@@ -269,7 +301,47 @@ class WPUCommunity {
         case 'edit':
             $this->postAction_edit();
             break;
+        case 'register':
+            $this->postAction_register();
+            break;
         }
+    }
+
+    public function postAction_register() {
+
+        // Check validity of values
+        if (empty($_POST) || !isset($_POST['user_email'], $_POST['user_password'], $_POST['user_password2'])) {
+            wp_redirect($this->get_url('register'));
+            die;
+        }
+
+        // Check email does not exists
+        $user = get_user_by('email', $_POST['user_email']);
+        if (is_object($user)) {
+            $this->set_message('fail-register-exists', __('This email is already in use', 'wpucommunity'));
+            wp_redirect($this->get_url('register'));
+            die;
+        }
+
+        // Check password = password 2
+        if ($_POST['user_password'] != $_POST['user_password2']) {
+            $this->set_message('fail-register-pass', __('The two password do not match', 'wpucommunity'));
+            wp_redirect($this->get_url('register'));
+            die;
+        }
+
+        // Create user
+        $user_login = str_replace(array('.', ' '), '', 'user-' . uniqid());
+        $user_id = wp_create_user($user_login, $_POST['user_password'], $_POST['user_email']);
+        if (is_numeric($user_id)) {
+            $this->set_message('success-register', __('Your account has been successfully created', 'wpucommunity'));
+            wp_signon(array('user_login' => $user_login, 'user_password' => $_POST['user_password']), false);
+            wp_redirect($this->get_url('account'));
+        } else {
+            $this->set_message('fail-register', __('The account could not be created', 'wpucommunity'));
+            wp_redirect($this->get_url('register'));
+        }
+        die;
     }
 
     public function postAction_edit() {
@@ -372,18 +444,32 @@ class WPUCommunity {
         return true;
     }
 
-    public function get_form_html() {
+    public function get_form_html($type = 'edit') {
 
-        $html = '<form action="" method="post" class="wpucommunity-form-edit"><div>';
-        $html .= wp_nonce_field('wpucommunity_form_edit', 'wpucommunity_form_edit', true, false);
-        $html .= '<input type="hidden" name="wpuc-action" value="edit" />';
-        foreach ($this->user_sections as $id => $section) {
-            $html .= $this->get_section_html($section['name'], $id);
+        $html = '<form action="" method="post" class="wpucommunity-form-' . $type . '"><div>';
+        $html .= wp_nonce_field('wpucommunity_form_' . $type, 'wpucommunity_form_' . $type, true, false);
+        $html .= '<input type="hidden" name="wpuc-action" value="' . $type . '" />';
+
+        switch ($type) {
+
+        case 'register':
+            $html .= '<ul>';
+            foreach ($this->register_fields as $id => $field) {
+                $html .= '<li>' . $this->get_field_html($id, $field, '') . '</li>';
+            }
+            $html .= '</ul>';
+            $html .= '<p><button type="submit">' . __('Register', 'wpucommunity') . '</button></p>';
+
+            break;
+
+        default:
+            foreach ($this->user_sections as $id => $section) {
+                $html .= $this->get_section_html($section['name'], $id);
+            }
+            $html .= '<p><button type="submit">' . __('Save', 'wpucommunity') . '</button></p>';
         }
 
-        $html .= '<p><button type="submit">' . __('Save', 'wpucommunity') . '</button></p>';
         $html .= '</div></form>';
-
         return $html;
     }
 
@@ -402,7 +488,7 @@ class WPUCommunity {
             if ($field['section'] != 'password' && $field['section'] != 'native') {
                 $value = get_user_meta($user_info->ID, $id, 1);
             }
-            $html .= '<li>' . $this->get_field_html($id, $field['name'], $value, $field['type']) . '</li>';
+            $html .= '<li>' . $this->get_field_html($id, $field, $value) . '</li>';
         }
 
         $html .= '</ul>';
@@ -410,7 +496,10 @@ class WPUCommunity {
 
     }
 
-    public function get_field_html($id, $name, $value, $type) {
+    public function get_field_html($id, $field = array(), $value = '') {
+        $name = isset($field['name']) && !empty($field['name']) ? $field['name'] : $id;
+        $type = isset($field['type']) && !empty($field['type']) ? $field['type'] : 'text';
+        $required = isset($field['required']) && $field['required'] ? ' required="required"' : 'text';
         $html = '';
         $html .= '<label for="' . $id . '">' . $name . '</label>';
         switch ($type) {
@@ -419,7 +508,7 @@ class WPUCommunity {
         case 'number':
         case 'email':
         case 'password':
-            $html .= '<input name="' . $id . '" id="' . $id . '" type="' . $type . '" value="' . $value . '" />';
+            $html .= '<input ' . $required . ' name="' . $id . '" id="' . $id . '" type="' . $type . '" value="' . $value . '" />';
             break;
         }
         return $html;
@@ -518,6 +607,11 @@ class WPUCommunity {
 
         // Empty messages
         delete_transient($this->transient_msg);
+    }
+
+    public function session_clear() {
+        session_regenerate_id();
+        session_destroy();
     }
 
     /* ----------------------------------------------------------
