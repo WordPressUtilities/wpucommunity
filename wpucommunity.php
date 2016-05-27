@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.7
+Version: 0.7.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -191,7 +191,7 @@ class WPUCommunity {
     ---------------------------------------------------------- */
 
     public function prevent_admin_access() {
-        if (current_user_can('upload_files')) {
+        if (!is_user_logged_in() || current_user_can('upload_files')) {
             return;
         }
 
@@ -231,6 +231,10 @@ class WPUCommunity {
 
     public function set_current_page($id) {
         $this->current_page = $id;
+    }
+
+    public function get_current_page() {
+        return !empty($this->current_page) ? $this->current_page : '';
     }
 
     public function check_current_page() {
@@ -535,10 +539,14 @@ class WPUCommunity {
 
     public function load_template_id($page_id) {
         $new_template = $this->get_template_theme_path($page_id);
-        if (!file_exists($new_template)) {
+        if (empty($new_template) || !file_exists($new_template)) {
             $new_template = $this->get_template_path($page_id);
         }
         return $new_template;
+    }
+
+    public function get_template_account_menu() {
+        return plugin_dir_path(__FILE__) . 'inc/account-menu.php';
     }
 
     public function get_template_path($page_id) {
@@ -546,7 +554,7 @@ class WPUCommunity {
     }
 
     public function get_template_theme_path($page_id) {
-        return get_stylesheet_directory() . '/wpuc-' . $page_id . '.php';
+        return locate_template('/wpuc-' . $page_id . '.php');
     }
 
     /* ----------------------------------------------------------

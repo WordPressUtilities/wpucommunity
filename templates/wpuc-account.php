@@ -1,10 +1,8 @@
 <?php
 get_header();
-do_action('wpucommunity_messages');
 $current_user = wp_get_current_user();
-
-echo '<a href="'.wp_logout_url().'">Log out</a>';
-
+include $WPUCommunity->get_template_account_menu();
+do_action('wpucommunity_messages');
 echo '<pre>';
 echo 'Username: ' . $current_user->user_login . "\n";
 echo 'User email: ' . $current_user->user_email . "\n";
