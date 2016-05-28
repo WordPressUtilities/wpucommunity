@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WPU Community\n"
-"POT-Creation-Date: 2016-05-23 23:54+0200\n"
+"POT-Creation-Date: 2016-05-28 23:40+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Darklg <darklg.blog@gmail.com>\n"
 "Language-Team: \n"
@@ -15,46 +15,124 @@ msgstr ""
 "X-Poedit-KeywordsList: __;_e\n"
 "X-Poedit-SearchPath-0: ../.\n"
 
-#: .././wpucommunity.php:61
+#: .././inc/account-menu.php:5
+msgid "Dashboard"
+msgstr "Tableau de bord"
+
+#: .././inc/account-menu.php:7
+msgid "Edit"
+msgstr "Modifier"
+
+#: .././inc/account-menu.php:9
+msgid "Log out"
+msgstr "Se déconnecter"
+
+#: .././wpucommunity.php:82 .././wpucommunity.php:89
 msgid "Sign in"
 msgstr "Se connecter"
 
-#: .././wpucommunity.php:68
+#: .././wpucommunity.php:96
 msgid "Infos"
 msgstr "Infos"
 
-#: .././wpucommunity.php:75
+#: .././wpucommunity.php:103
 msgid "Account"
 msgstr "Compte"
 
-#: .././wpucommunity.php:81
+#: .././wpucommunity.php:109
 msgid "My Infos"
 msgstr "Mes Infos"
 
-#: .././wpucommunity.php:84
+#: .././wpucommunity.php:112
 msgid "My Password"
 msgstr "Mon mot de passe"
 
-#: .././wpucommunity.php:91
+#: .././wpucommunity.php:119
 msgid "First name"
 msgstr "Prénom"
 
-#: .././wpucommunity.php:96
+#: .././wpucommunity.php:124
 msgid "Last name"
 msgstr "Nom"
 
-#: .././wpucommunity.php:101
+#: .././wpucommunity.php:130 .././wpucommunity.php:159
+#: .././wpucommunity.php:177
 msgid "Email"
 msgstr "Email"
 
-#: .././wpucommunity.php:106
+#: .././wpucommunity.php:136
+msgid "Nick name"
+msgstr "Pseudonyme"
+
+#: .././wpucommunity.php:141
+msgid "Description"
+msgstr "Description"
+
+#: .././wpucommunity.php:146
 msgid "New password"
 msgstr "Nouveau mot de passe"
 
-#: .././wpucommunity.php:111
+#: .././wpucommunity.php:151
 msgid "New password (repeat)"
 msgstr "Nouveau mot de passe (bis)"
 
-#: .././wpucommunity.php:355
+#: .././wpucommunity.php:164 .././wpucommunity.php:182
+msgid "Password"
+msgstr "Mot de passe"
+
+#: .././wpucommunity.php:169
+msgid "Password (repeat)"
+msgstr "Mot de passe (bis)"
+
+#: .././wpucommunity.php:186
+msgid "Remember me"
+msgstr "Se souvenir de moi"
+
+#: .././wpucommunity.php:351
+msgid "The form is invalid"
+msgstr "Le formulaire est invalide ou incomplet."
+
+#: .././wpucommunity.php:359
+msgid "This email is not linked to an account"
+msgstr "Cet e-mail n’est pas lié à un compte"
+
+#: .././wpucommunity.php:376
+msgid "The password is invalid."
+msgstr "Le mot de passe est invalide"
+
+#: .././wpucommunity.php:394
+msgid "This email is already in use"
+msgstr "Cet e-mail est déjà utilisé"
+
+#: .././wpucommunity.php:401
+msgid "The two password do not match"
+msgstr "Les deux mots de passe ne sont pas identiques."
+
+#: .././wpucommunity.php:410
+msgid "Your account has been successfully created"
+msgstr "Votre compte a été créé avec succès !"
+
+#: .././wpucommunity.php:414
+msgid "The account could not be created"
+msgstr "Le compte n’a pas pu être créé"
+
+#: .././wpucommunity.php:446
+#, php-format
+msgid "The field \"%s\" is missing"
+msgstr "Le champ \"%s\" est manquant"
+
+#: .././wpucommunity.php:467
+msgid "Your account has been successfully edited"
+msgstr "Votre compte a été modifié avec succès"
+
+#: .././wpucommunity.php:539
+msgid "Register"
+msgstr "S'inscrire"
+
+#: .././wpucommunity.php:549
+msgid "Login"
+msgstr "Connexion"
+
+#: .././wpucommunity.php:557
 msgid "Save"
 msgstr "Enregistrer"

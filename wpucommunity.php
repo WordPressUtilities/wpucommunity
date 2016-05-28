@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.7.2
+Version: 0.8
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -126,8 +126,20 @@ class WPUCommunity {
             ),
             'user_email' => array(
                 'section' => 'native',
+                'required' => 1,
                 'name' => __('Email', 'wpucommunity'),
                 'type' => 'email'
+            ),
+            'nickname' => array(
+                'section' => 'native',
+                'required' => 1,
+                'name' => __('Nick name', 'wpucommunity'),
+                'type' => 'text'
+            ),
+            'description' => array(
+                'section' => 'native',
+                'name' => __('Description', 'wpucommunity'),
+                'type' => 'textarea'
             ),
             'new_password' => array(
                 'section' => 'new_password',
@@ -143,25 +155,40 @@ class WPUCommunity {
 
         $register_fields = array(
             'user_email' => array(
-                'section' => 'native',
                 'required' => 1,
                 'name' => __('Email', 'wpucommunity'),
                 'type' => 'email'
             ),
             'user_password' => array(
-                'section' => 'password',
                 'required' => 1,
                 'name' => __('Password', 'wpucommunity'),
                 'type' => 'password'
             ),
             'user_password2' => array(
-                'section' => 'password',
                 'required' => 1,
                 'name' => __('Password (repeat)', 'wpucommunity'),
                 'type' => 'password'
             )
         );
 
+        $login_fields = array(
+            'user_email' => array(
+                'required' => 1,
+                'name' => __('Email', 'wpucommunity'),
+                'type' => 'email'
+            ),
+            'user_password' => array(
+                'required' => 1,
+                'name' => __('Password', 'wpucommunity'),
+                'type' => 'password'
+            ),
+            'remember' => array(
+                'name' => __('Remember me', 'wpucommunity'),
+                'type' => 'checkbox'
+            )
+        );
+
+        $this->login_fields = apply_filters('wpucommunity_login_fields', $login_fields);
         $this->register_fields = apply_filters('wpucommunity_register_fields', $register_fields);
         $this->user_sections = apply_filters('wpucommunity_user_sections', $user_sections);
         $this->user_fields = apply_filters('wpucommunity_user_fields', $user_fields);
@@ -172,6 +199,9 @@ class WPUCommunity {
             }
             if (!isset($field['type'])) {
                 $this->user_fields[$id]['type'] = 'text';
+            }
+            if (!isset($field['required'])) {
+                $this->user_fields[$id]['required'] = false;
             }
         }
 
@@ -200,7 +230,7 @@ class WPUCommunity {
 
         if (is_admin() && !(defined('DOING_AJAX') && DOING_AJAX)) {
             wp_redirect(home_url());
-            exit;
+            die;
         }
     }
 
@@ -261,13 +291,13 @@ class WPUCommunity {
             /* Must be logged : redirect to signin */
             if (!$logged_in && $tmp_page['must_be_logged']) {
                 wp_redirect($this->get_url('signin'));
-                exit();
+                die;
             }
 
             /* Must not be logged : redirect to account */
             if ($logged_in && $tmp_page['must_not_be_logged']) {
                 wp_redirect($this->get_url('account'));
-                exit();
+                die;
             }
         }
     }
@@ -308,13 +338,52 @@ class WPUCommunity {
         case 'register':
             $this->postAction_register();
             break;
+        case 'login':
+            $this->postAction_login();
+            break;
         }
+    }
+
+    public function postAction_login() {
+
+        // Check validity of values
+        if (empty($_POST) || !isset($_POST['user_email'], $_POST['user_password']) || !is_email($_POST['user_email'])) {
+            $this->set_message('fail-login-form', __('The form is invalid', 'wpucommunity'), 'error');
+            wp_redirect($this->get_url('login'));
+            die;
+        }
+
+        // Check email does exists
+        $user = get_user_by('email', $_POST['user_email']);
+        if (!is_object($user)) {
+            $this->set_message('fail-login-exists', __('This email is not linked to an account', 'wpucommunity'), 'error');
+            wp_redirect($this->get_url('login'));
+            die;
+        }
+
+
+        $creds = array(
+            'user_login' => $_POST['user_email'],
+            'user_password' => $_POST['user_password'],
+            'remember' => isset($_POST['remember'])
+        );
+
+        $signon = wp_signon($creds, false);
+
+        if (!is_wp_error($signon)) {
+            wp_redirect($this->get_url('account-edit'));
+        } else {
+            $this->set_message('fail-login-access', __('The password is invalid.', 'wpucommunity'), 'error');
+            wp_redirect($this->get_url('signin'));
+        }
+        die;
+
     }
 
     public function postAction_register() {
 
         // Check validity of values
-        if (empty($_POST) || !isset($_POST['user_email'], $_POST['user_password'], $_POST['user_password2'])) {
+        if (empty($_POST) || !isset($_POST['user_email'], $_POST['user_password'], $_POST['user_password2']) || !is_email($_POST['user_email'])) {
             wp_redirect($this->get_url('register'));
             die;
         }
@@ -322,14 +391,14 @@ class WPUCommunity {
         // Check email does not exists
         $user = get_user_by('email', $_POST['user_email']);
         if (is_object($user)) {
-            $this->set_message('fail-register-exists', __('This email is already in use', 'wpucommunity'));
+            $this->set_message('fail-register-exists', __('This email is already in use', 'wpucommunity'), 'error');
             wp_redirect($this->get_url('register'));
             die;
         }
 
         // Check password = password 2
         if ($_POST['user_password'] != $_POST['user_password2']) {
-            $this->set_message('fail-register-pass', __('The two password do not match', 'wpucommunity'));
+            $this->set_message('fail-register-pass', __('The two password do not match', 'wpucommunity'), 'error');
             wp_redirect($this->get_url('register'));
             die;
         }
@@ -342,7 +411,7 @@ class WPUCommunity {
             wp_signon(array('user_login' => $user_login, 'user_password' => $_POST['user_password']), false);
             wp_redirect($this->get_url('account'));
         } else {
-            $this->set_message('fail-register', __('The account could not be created', 'wpucommunity'));
+            $this->set_message('fail-register', __('The account could not be created', 'wpucommunity'), 'error');
             wp_redirect($this->get_url('register'));
         }
         die;
@@ -371,6 +440,11 @@ class WPUCommunity {
             // Get submitted value
             if (isset($_POST[$id])) {
                 $value = $this->validate_field($id, $field, $_POST[$id]);
+            }
+
+            if ($field['required'] && empty($value)) {
+                $this->set_message('empty-field-' . $id, sprintf(__('The field "%s" is missing', 'wpucommunity'), $field['name']), 'error');
+                continue;
             }
 
             // Save value
@@ -442,7 +516,7 @@ class WPUCommunity {
         wp_logout();
         if (wp_signon(array('user_login' => $user_info->user_login, 'user_password' => $post['new_password']), false)):
             wp_redirect($this->get_url('account-edit'));
-            exit;
+            die;
         endif;
 
         return true;
@@ -463,6 +537,16 @@ class WPUCommunity {
             }
             $html .= '</ul>';
             $html .= '<p><button type="submit">' . __('Register', 'wpucommunity') . '</button></p>';
+
+            break;
+
+        case 'login':
+            $html .= '<ul>';
+            foreach ($this->login_fields as $id => $field) {
+                $html .= '<li>' . $this->get_field_html($id, $field, '') . '</li>';
+            }
+            $html .= '</ul>';
+            $html .= '<p><button type="submit">' . __('Login', 'wpucommunity') . '</button></p>';
 
             break;
 
@@ -513,6 +597,12 @@ class WPUCommunity {
         case 'email':
         case 'password':
             $html .= '<input ' . $required . ' name="' . $id . '" id="' . $id . '" type="' . $type . '" value="' . $value . '" />';
+            break;
+        case 'checkbox':
+            $html = '<input ' . $required . ' name="' . $id . '" id="' . $id . '" type="' . $type . '" ' . ($value == '1' ? 'checked="checked"' : '') . ' />' . $html;
+            break;
+        case 'textarea':
+            $html .= '<textarea ' . $required . ' name="' . $id . '" id="' . $id . '">' . $value . '</textarea>';
             break;
         }
         return $html;
