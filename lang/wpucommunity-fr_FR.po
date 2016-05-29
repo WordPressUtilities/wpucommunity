@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WPU Community\n"
-"POT-Creation-Date: 2016-05-28 23:40+0200\n"
+"POT-Creation-Date: 2016-05-29 23:46+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Darklg <darklg.blog@gmail.com>\n"
 "Language-Team: \n"
@@ -56,7 +56,7 @@ msgid "Last name"
 msgstr "Nom"
 
 #: .././wpucommunity.php:130 .././wpucommunity.php:159
-#: .././wpucommunity.php:177
+#: .././wpucommunity.php:179
 msgid "Email"
 msgstr "Email"
 
@@ -76,7 +76,7 @@ msgstr "Nouveau mot de passe"
 msgid "New password (repeat)"
 msgstr "Nouveau mot de passe (bis)"
 
-#: .././wpucommunity.php:164 .././wpucommunity.php:182
+#: .././wpucommunity.php:164 .././wpucommunity.php:184
 msgid "Password"
 msgstr "Mot de passe"
 
@@ -84,55 +84,66 @@ msgstr "Mot de passe"
 msgid "Password (repeat)"
 msgstr "Mot de passe (bis)"
 
-#: .././wpucommunity.php:186
+#: .././wpucommunity.php:188
 msgid "Remember me"
 msgstr "Se souvenir de moi"
 
-#: .././wpucommunity.php:351
+#: .././wpucommunity.php:195
+msgid "Username"
+msgstr "Nom d'utilisateur"
+
+#: .././wpucommunity.php:358
 msgid "The form is invalid"
 msgstr "Le formulaire est invalide ou incomplet."
 
-#: .././wpucommunity.php:359
-msgid "This email is not linked to an account"
-msgstr "Cet e-mail n’est pas lié à un compte"
+#: .././wpucommunity.php:367
+msgid "The username should be an email"
+msgstr "Le nom d’utilisateur doit être un email"
 
-#: .././wpucommunity.php:376
+#: .././wpucommunity.php:377
+msgid "This username is not linked to an account"
+msgstr "Ce nom d’utilisateur n’est pas lié à un compte"
+
+#: .././wpucommunity.php:393
 msgid "The password is invalid."
 msgstr "Le mot de passe est invalide"
 
-#: .././wpucommunity.php:394
+#: .././wpucommunity.php:411
 msgid "This email is already in use"
 msgstr "Cet e-mail est déjà utilisé"
 
-#: .././wpucommunity.php:401
+#: .././wpucommunity.php:418
 msgid "The two password do not match"
 msgstr "Les deux mots de passe ne sont pas identiques."
 
-#: .././wpucommunity.php:410
+#: .././wpucommunity.php:427
 msgid "Your account has been successfully created"
 msgstr "Votre compte a été créé avec succès !"
 
-#: .././wpucommunity.php:414
+#: .././wpucommunity.php:431
 msgid "The account could not be created"
 msgstr "Le compte n’a pas pu être créé"
 
-#: .././wpucommunity.php:446
+#: .././wpucommunity.php:463
 #, php-format
 msgid "The field \"%s\" is missing"
 msgstr "Le champ \"%s\" est manquant"
 
-#: .././wpucommunity.php:467
+#: .././wpucommunity.php:484
 msgid "Your account has been successfully edited"
 msgstr "Votre compte a été modifié avec succès"
 
-#: .././wpucommunity.php:539
+#: .././wpucommunity.php:556
 msgid "Register"
 msgstr "S'inscrire"
 
-#: .././wpucommunity.php:549
+#: .././wpucommunity.php:566
 msgid "Login"
 msgstr "Connexion"
 
-#: .././wpucommunity.php:557
+#: .././wpucommunity.php:574
 msgid "Save"
 msgstr "Enregistrer"
+
+#~ msgid "This email is not linked to an account"
+#~ msgstr "Cet e-mail n’est pas lié à un compte"

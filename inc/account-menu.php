@@ -6,6 +6,6 @@ $wpc_p = $WPUCommunity->get_current_page();
     -
     <a class="<?php echo ($wpc_p == 'account-edit' ? 'current' : ''); ?>" href="<?php echo $WPUCommunity->get_url('account-edit'); ?>"><?php echo __( 'Edit', 'wpucommunity' ); ?></a>
     -
-    <a href="<?php echo wp_logout_url(); ?>"><?php echo __( 'Log out', 'wpucommunity' ); ?></a>
+    <a href="<?php echo $WPUCommunity->get_logout_url() ?>"><?php echo __( 'Log out', 'wpucommunity' ); ?></a>
 </nav>
 <hr />

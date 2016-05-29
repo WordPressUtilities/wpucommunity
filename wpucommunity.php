@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.8
+Version: 0.8.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -171,6 +171,8 @@ class WPUCommunity {
             )
         );
 
+        $this->use_email_as_login = apply_filters('wpucommunity_use_email_as_login', true);
+
         $login_fields = array(
             'user_email' => array(
                 'required' => 1,
@@ -187,6 +189,11 @@ class WPUCommunity {
                 'type' => 'checkbox'
             )
         );
+
+        if (!$this->use_email_as_login) {
+            $login_fields['user_email']['type'] = 'text';
+            $login_fields['user_email']['name'] = __('Username', 'wpucommunity');
+        }
 
         $this->login_fields = apply_filters('wpucommunity_login_fields', $login_fields);
         $this->register_fields = apply_filters('wpucommunity_register_fields', $register_fields);
@@ -347,20 +354,30 @@ class WPUCommunity {
     public function postAction_login() {
 
         // Check validity of values
-        if (empty($_POST) || !isset($_POST['user_email'], $_POST['user_password']) || !is_email($_POST['user_email'])) {
+        if (empty($_POST) || !isset($_POST['user_email'], $_POST['user_password'])) {
             $this->set_message('fail-login-form', __('The form is invalid', 'wpucommunity'), 'error');
-            wp_redirect($this->get_url('login'));
+            wp_redirect($this->get_url('signin'));
             die;
         }
+
+        $field_type = is_email($_POST['user_email']) ? 'email' : 'slug';
+
+        if ($this->use_email_as_login) {
+            if ($field_type != 'email') {
+                $this->set_message('fail-login-email', __('The username should be an email', 'wpucommunity'), 'error');
+                wp_redirect($this->get_url('signin'));
+                die;
+            }
+        }
+
+        $user = get_user_by($field_type, $_POST['user_email']);
 
         // Check email does exists
-        $user = get_user_by('email', $_POST['user_email']);
         if (!is_object($user)) {
-            $this->set_message('fail-login-exists', __('This email is not linked to an account', 'wpucommunity'), 'error');
-            wp_redirect($this->get_url('login'));
+            $this->set_message('fail-login-exists', __('This username is not linked to an account', 'wpucommunity'), 'error');
+            wp_redirect($this->get_url('signin'));
             die;
         }
-
 
         $creds = array(
             'user_login' => $_POST['user_email'],
