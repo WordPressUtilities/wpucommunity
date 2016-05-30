@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.8.1
+Version: 0.9
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -55,6 +55,14 @@ class WPUCommunity {
             'template_redirect'
         ), 99);
 
+        add_filter('pre_get_document_title', array(&$this,
+            'wp_title'
+        ), 1000, 2);
+
+        add_filter('wp_title', array(&$this,
+            'wp_title'
+        ), 1000, 2);
+
         add_action('init', array(&$this,
             'postAction'
         ), 10);
@@ -103,6 +111,19 @@ class WPUCommunity {
                 'name' => __('Account', 'wpucommunity')
             )
         );
+
+        $this->enable_profile_pages = apply_filters('wpucommunity_enable_profile_pages', true);
+        if ($this->enable_profile_pages) {
+            $this->pages['profile'] = array(
+                'url' => '/profile/',
+                'regex' => '^profile/([a-z0-9_-]+)/?',
+                'arguments' => array('username'),
+                'must_be_logged' => 0,
+                'must_not_be_logged' => 0,
+                'name' => __('Profile', 'wpucommunity'),
+                'title_args' => __('#username#\'s profile', 'wpucommunity')
+            );
+        }
 
         $user_sections = array(
             'native' => array(
@@ -171,8 +192,6 @@ class WPUCommunity {
             )
         );
 
-        $this->use_email_as_login = apply_filters('wpucommunity_use_email_as_login', true);
-
         $login_fields = array(
             'user_email' => array(
                 'required' => 1,
@@ -189,6 +208,8 @@ class WPUCommunity {
                 'type' => 'checkbox'
             )
         );
+
+        $this->use_email_as_login = apply_filters('wpucommunity_use_email_as_login', true);
 
         if (!$this->use_email_as_login) {
             $login_fields['user_email']['type'] = 'text';
@@ -256,13 +277,22 @@ class WPUCommunity {
         }
 
         foreach ($this->pages as $id => $p) {
-            add_rewrite_rule($p['regex'], 'index.php?wpuc=' . $id, 'top');
+            $redirect = 'index.php?wpuc=' . $id;
+            if (isset($p['arguments']) && is_array($p['arguments'])) {
+                foreach ($p['arguments'] as $i => $arg) {
+                    $redirect .= '&' . esc_html($arg) . '=$matches[' . ($i + 1) . ']';
+                }
+                add_rewrite_rule($p['regex'], $redirect, 'top');
+            } else {
+                add_rewrite_rule($p['regex'], $redirect, 'top');
+            }
         }
 
     }
 
     public function add_query_vars_filter($vars) {
         $vars[] = "wpuc";
+        $vars[] = "username";
         return $vars;
     }
 
@@ -290,6 +320,30 @@ class WPUCommunity {
             return;
         }
 
+        // Profile pages
+        if ($this->enable_profile_pages && $this->current_page == 'profile') {
+
+            // Prevent empty username
+            $username = get_query_var('username');
+            if (empty($username)) {
+                wp_redirect(home_url());
+                die;
+            }
+
+            // Prevent invalid slugs
+            $user = get_user_by('slug', $username);
+            if (!is_object($user) || is_wp_error($user)) {
+                global $wp_query;
+                header("HTTP/1.0 404 Not Found - Archive Empty");
+                $wp_query->set_404();
+                require locate_template('404.php');
+                exit;
+            }
+
+            return true;
+
+        }
+
         foreach ($this->pages as $id_page => $tmp_page) {
             if ($id_page != $this->current_page) {
                 continue;
@@ -307,6 +361,27 @@ class WPUCommunity {
                 die;
             }
         }
+    }
+
+    public function wp_title($title) {
+        if (empty($this->current_page)) {
+            return $title;
+        }
+        $p = $this->pages[$this->current_page];
+
+        $pagename = $p['name'];
+        if (isset($p['title_args'], $p['arguments']) && is_array($p['arguments'])) {
+            $pagename = $p['title_args'];
+            foreach ($p['arguments'] as $arg) {
+                $pagename = str_replace('#' . $arg . '#', get_query_var($arg), $pagename);
+            }
+        }
+
+        $separator = ' | ';
+
+        $title = $pagename . $separator . get_bloginfo('name');
+        $title = apply_filters('wpucommunity_page_title', $title, $pagename, $separator);
+        return $title;
     }
 
     public function body_classes($classes) {
@@ -541,7 +616,7 @@ class WPUCommunity {
 
     public function get_form_html($type = 'edit') {
 
-        $html = '<form action="" method="post" class="wpucommunity-form-' . $type . '"><div>';
+        $html = '<form action="' . esc_url(home_url('/')) . '" method="post" class="wpucommunity-form-' . $type . '"><div>';
         $html .= wp_nonce_field('wpucommunity_form_' . $type, 'wpucommunity_form_' . $type, true, false);
         $html .= '<input type="hidden" name="wpuc-action" value="' . $type . '" />';
 
@@ -604,7 +679,7 @@ class WPUCommunity {
     public function get_field_html($id, $field = array(), $value = '') {
         $name = isset($field['name']) && !empty($field['name']) ? $field['name'] : $id;
         $type = isset($field['type']) && !empty($field['type']) ? $field['type'] : 'text';
-        $required = isset($field['required']) && $field['required'] ? ' required="required"' : 'text';
+        $required = isset($field['required']) && $field['required'] ? ' required="required"' : '';
         $html = '';
         $html .= '<label for="' . $id . '">' . $name . '</label>';
         switch ($type) {
@@ -624,6 +699,10 @@ class WPUCommunity {
         }
         return $html;
     }
+
+    /* ----------------------------------------------------------
+      Public profile
+    ---------------------------------------------------------- */
 
     /* ----------------------------------------------------------
       Template functions
