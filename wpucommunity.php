@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.9
+Version: 0.9.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -462,8 +462,9 @@ class WPUCommunity {
 
         $signon = wp_signon($creds, false);
 
+        $login_success_url = apply_filters('wpucommunity_login_success_url', $this->get_url('account-edit'));
         if (!is_wp_error($signon)) {
-            wp_redirect($this->get_url('account-edit'));
+            wp_redirect($login_success_url);
         } else {
             $this->set_message('fail-login-access', __('The password is invalid.', 'wpucommunity'), 'error');
             wp_redirect($this->get_url('signin'));
@@ -498,10 +499,11 @@ class WPUCommunity {
         // Create user
         $user_login = str_replace(array('.', ' '), '', 'user-' . uniqid());
         $user_id = wp_create_user($user_login, $_POST['user_password'], $_POST['user_email']);
+        $register_success_url = apply_filters('wpucommunity_register_success_url', $this->get_url('account'));
         if (is_numeric($user_id)) {
             $this->set_message('success-register', __('Your account has been successfully created', 'wpucommunity'));
             wp_signon(array('user_login' => $user_login, 'user_password' => $_POST['user_password']), false);
-            wp_redirect($this->get_url('account'));
+            wp_redirect($register_success_url);
         } else {
             $this->set_message('fail-register', __('The account could not be created', 'wpucommunity'), 'error');
             wp_redirect($this->get_url('register'));
