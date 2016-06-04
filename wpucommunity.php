@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.9.1
+Version: 0.10
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -80,6 +80,17 @@ class WPUCommunity {
         ));
 
         load_plugin_textdomain('wpucommunity', false, dirname(plugin_basename(__FILE__)) . '/lang/');
+
+        $base_role = array(
+            'id' => 'wpumember',
+            'name' => __('Member', 'wpucommunity'),
+            'capabilities' => array(
+                'read' => true,
+                'level_0' => true
+            )
+        );
+
+        $this->role = apply_filters('wpucommunity_base_role', $base_role);
 
         $this->pages = array(
             'register' => array(
@@ -497,9 +508,14 @@ class WPUCommunity {
         }
 
         // Create user
-        $user_login = str_replace(array('.', ' '), '', 'user-' . uniqid());
-        $user_id = wp_create_user($user_login, $_POST['user_password'], $_POST['user_email']);
         $register_success_url = apply_filters('wpucommunity_register_success_url', $this->get_url('account'));
+        $user_login = str_replace(array('.', ' '), '', 'user-' . uniqid());
+        $user_id = wp_insert_user(array(
+            'user_login' => $user_login,
+            'user_email' => $_POST['user_email'],
+            'user_pass' => $_POST['user_password'],
+            'role' => $this->role['id']
+        ));
         if (is_numeric($user_id)) {
             $this->set_message('success-register', __('Your account has been successfully created', 'wpucommunity'));
             wp_signon(array('user_login' => $user_login, 'user_password' => $_POST['user_password']), false);
@@ -815,15 +831,29 @@ class WPUCommunity {
     }
 
     /* ----------------------------------------------------------
+      User role
+    ---------------------------------------------------------- */
+
+    public function add_user_role() {
+        $this->remove_user_role();
+        add_role($this->role['id'], $this->role['name'], $this->role['capabilities']);
+    }
+
+    public function remove_user_role() {
+        remove_role($this->role['id']);
+    }
+
+    /* ----------------------------------------------------------
       Activation
     ---------------------------------------------------------- */
 
     public function activation() {
-        update_option('users_can_register', 1);
+        update_option('users_can_register', 0);
+        $this->add_user_role();
     }
 
     public function deactivation() {
-        update_option('users_can_register', 0);
+        $this->remove_user_role();
     }
 
 }
