@@ -3,7 +3,7 @@
 /*
 Plugin Name: WPU Community
 Description: Launch a community
-Version: 0.10
+Version: 0.10.1
 Author: Darklg
 Author URI: http://darklg.me/
 License: MIT License
@@ -18,6 +18,8 @@ class WPUCommunity {
         'update-nag',
         'error'
     );
+
+    public $opt_rules = 'wpucommunity_rewriterules';
 
     private $pages = array();
     private $user_fields = array();
@@ -62,6 +64,10 @@ class WPUCommunity {
         add_filter('wp_title', array(&$this,
             'wp_title'
         ), 1000, 2);
+
+        add_action('pre_get_posts', array(&$this,
+            'disable_home_page'
+        ), 1);
 
         add_action('init', array(&$this,
             'postAction'
@@ -279,11 +285,10 @@ class WPUCommunity {
 
     public function rewrite_rules() {
 
-        $opt_rules = 'wpucommunity_rewriterules';
         $opt_rules_version = md5(serialize($this->pages));
 
-        if (get_option($opt_rules) != $opt_rules_version) {
-            update_option($opt_rules, $opt_rules_version);
+        if (get_option($this->opt_rules) != $opt_rules_version) {
+            update_option($this->opt_rules, $opt_rules_version);
             flush_rewrite_rules();
         }
 
@@ -395,6 +400,20 @@ class WPUCommunity {
         return $title;
     }
 
+    public function disable_home_page($query) {
+        if (!$query->is_main_query()) {
+            return false;
+        }
+        if (empty($this->current_page)) {
+            return false;
+        }
+        $query->set('is_home', false);
+        $query->is_home = false;
+        $query->set('is_front_page', false);
+        $query->is_front_page = false;
+
+    }
+
     public function body_classes($classes) {
         if (empty($this->current_page)) {
             return $classes;
@@ -475,6 +494,7 @@ class WPUCommunity {
 
         $login_success_url = apply_filters('wpucommunity_login_success_url', $this->get_url('account-edit'));
         if (!is_wp_error($signon)) {
+            update_user_meta($signon->ID, 'last_login_time', time());
             wp_redirect($login_success_url);
         } else {
             $this->set_message('fail-login-access', __('The password is invalid.', 'wpucommunity'), 'error');
@@ -854,6 +874,11 @@ class WPUCommunity {
 
     public function deactivation() {
         $this->remove_user_role();
+    }
+
+    public function uninstall() {
+        $this->remove_user_role();
+        delete_option($this->opt_rules);
     }
 
 }

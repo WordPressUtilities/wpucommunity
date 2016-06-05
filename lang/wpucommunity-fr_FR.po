@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WPU Community\n"
-"POT-Creation-Date: 2016-06-01 17:07+0200\n"
+"POT-Creation-Date: 2016-06-05 23:04+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: Darklg <darklg.blog@gmail.com>\n"
 "Language-Team: \n"
@@ -27,129 +27,133 @@ msgstr "Modifier"
 msgid "Log out"
 msgstr "Se déconnecter"
 
-#: .././wpucommunity.php:90 .././wpucommunity.php:97
+#: .././wpucommunity.php:92
+msgid "Member"
+msgstr "Membre"
+
+#: .././wpucommunity.php:107 .././wpucommunity.php:114
 msgid "Sign in"
 msgstr "Se connecter"
 
-#: .././wpucommunity.php:104
+#: .././wpucommunity.php:121
 msgid "Infos"
 msgstr "Infos"
 
-#: .././wpucommunity.php:111
+#: .././wpucommunity.php:128
 msgid "Account"
 msgstr "Compte"
 
-#: .././wpucommunity.php:123
+#: .././wpucommunity.php:140
 msgid "Profile"
 msgstr "Profil"
 
-#: .././wpucommunity.php:124
+#: .././wpucommunity.php:141
 msgid "#username#'s profile"
 msgstr "Profil de #username#"
 
-#: .././wpucommunity.php:130
+#: .././wpucommunity.php:147
 msgid "My Infos"
 msgstr "Mes Infos"
 
-#: .././wpucommunity.php:133
+#: .././wpucommunity.php:150
 msgid "My Password"
 msgstr "Mon mot de passe"
 
-#: .././wpucommunity.php:140
+#: .././wpucommunity.php:157
 msgid "First name"
 msgstr "Prénom"
 
-#: .././wpucommunity.php:145
+#: .././wpucommunity.php:162
 msgid "Last name"
 msgstr "Nom"
 
-#: .././wpucommunity.php:151 .././wpucommunity.php:180
-#: .././wpucommunity.php:198
+#: .././wpucommunity.php:168 .././wpucommunity.php:197
+#: .././wpucommunity.php:215
 msgid "Email"
 msgstr "Email"
 
-#: .././wpucommunity.php:157
+#: .././wpucommunity.php:174
 msgid "Nick name"
 msgstr "Pseudonyme"
 
-#: .././wpucommunity.php:162
+#: .././wpucommunity.php:179
 msgid "Description"
 msgstr "Description"
 
-#: .././wpucommunity.php:167
+#: .././wpucommunity.php:184
 msgid "New password"
 msgstr "Nouveau mot de passe"
 
-#: .././wpucommunity.php:172
+#: .././wpucommunity.php:189
 msgid "New password (repeat)"
 msgstr "Nouveau mot de passe (bis)"
 
-#: .././wpucommunity.php:185 .././wpucommunity.php:203
+#: .././wpucommunity.php:202 .././wpucommunity.php:220
 msgid "Password"
 msgstr "Mot de passe"
 
-#: .././wpucommunity.php:190
+#: .././wpucommunity.php:207
 msgid "Password (repeat)"
 msgstr "Mot de passe (bis)"
 
-#: .././wpucommunity.php:207
+#: .././wpucommunity.php:224
 msgid "Remember me"
 msgstr "Se souvenir de moi"
 
-#: .././wpucommunity.php:216
+#: .././wpucommunity.php:233
 msgid "Username"
 msgstr "Nom d'utilisateur"
 
-#: .././wpucommunity.php:433
+#: .././wpucommunity.php:463
 msgid "The form is invalid"
 msgstr "Le formulaire est invalide ou incomplet."
 
-#: .././wpucommunity.php:442
+#: .././wpucommunity.php:472
 msgid "The username should be an email"
 msgstr "Le nom d’utilisateur doit être un email"
 
-#: .././wpucommunity.php:452
+#: .././wpucommunity.php:482
 msgid "This username is not linked to an account"
 msgstr "Ce nom d’utilisateur n’est pas lié à un compte"
 
-#: .././wpucommunity.php:469
+#: .././wpucommunity.php:500
 msgid "The password is invalid."
 msgstr "Le mot de passe est invalide"
 
-#: .././wpucommunity.php:487
+#: .././wpucommunity.php:518
 msgid "This email is already in use"
 msgstr "Cet e-mail est déjà utilisé"
 
-#: .././wpucommunity.php:494
+#: .././wpucommunity.php:525
 msgid "The two password do not match"
 msgstr "Les deux mots de passe ne sont pas identiques."
 
-#: .././wpucommunity.php:504
+#: .././wpucommunity.php:540
 msgid "Your account has been successfully created"
 msgstr "Votre compte a été créé avec succès !"
 
-#: .././wpucommunity.php:508
+#: .././wpucommunity.php:544
 msgid "The account could not be created"
 msgstr "Le compte n’a pas pu être créé"
 
-#: .././wpucommunity.php:540
+#: .././wpucommunity.php:576
 #, php-format
 msgid "The field \"%s\" is missing"
 msgstr "Le champ \"%s\" est manquant"
 
-#: .././wpucommunity.php:561
+#: .././wpucommunity.php:597
 msgid "Your account has been successfully edited"
 msgstr "Votre compte a été modifié avec succès"
 
-#: .././wpucommunity.php:633
+#: .././wpucommunity.php:669
 msgid "Register"
 msgstr "S'inscrire"
 
-#: .././wpucommunity.php:643
+#: .././wpucommunity.php:679
 msgid "Login"
 msgstr "Connexion"
 
-#: .././wpucommunity.php:651
+#: .././wpucommunity.php:687
 msgid "Save"
 msgstr "Enregistrer"
 
